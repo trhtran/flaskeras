@@ -1,0 +1,1 @@
+curl -X POST -F image=@../app/data/saved_img/00000334_cam-image_array_.jpg 'http://192.168.40.106:5000/predict'
