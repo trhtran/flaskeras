@@ -95,11 +95,11 @@ def upload():
 
         destination = '/'.join([target, filename])
         imgFiles.append(filename)
-        #print('Saving file to ', destination)
-        #print('predict: ', predict(destination))
         predictVals.append(predict2(destination)['predict'])
         upload.save(destination)
-    return render_template("gallery.html", image_names=imgFiles, predictVal=predictVals[0])
+    img_pred = zip(imgFiles, predictVals)
+    return render_template("gallery.html", img_pred=img_pred)
+    #return render_template("gallery.html", image_names=imgFiles, predictVal=predictVals[0])
 
 @app.route('/<filename>')
 def send_image(filename):
