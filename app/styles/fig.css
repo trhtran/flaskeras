@@ -1,0 +1,13 @@
+figure {
+    display: inline-block;
+    border: thin silver solid;
+    margin: 20px;
+    padding: 0.5em;
+}
+figure img {
+    vertical-align: top;
+}
+figure figcaption {
+    border: 1px dotted blue;
+    text-align: center;
+}

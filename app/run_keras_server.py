@@ -73,7 +73,6 @@ def predict() :
 
     if request.method == "POST" :
         if request.files.get("image") :
-            fPath = request.files.get("image")
             try :
                 data['predict'] = getPrediction(request.files.get("image"))
                 data['success'] = True
@@ -110,7 +109,6 @@ def upload():
         predictVals.append(predict2(destination)['predict'])
     img_pred = zip(imgFiles, predictVals)
     return render_template("gallery.html", img_pred=img_pred)
-    #return render_template("gallery.html", image_names=imgFiles, predictVal=predictVals[0])
 
 @app.route('/<filename>')
 def send_image(filename):
