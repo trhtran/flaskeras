@@ -18,7 +18,7 @@ r = requests.post(KERAS_REST_API_URL, files=payload).json()
 
 # ensure the request was sucessful
 if r["success"]:
-    print ("PREDICTION: ", r['prediction'])
+    print ("PREDICTION: ", r['predict'])
 # otherwise, the request failed
 else:
 	print("Request failed")

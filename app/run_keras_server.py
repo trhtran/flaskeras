@@ -53,17 +53,20 @@ def getPrediction(filename) :
     image = np.array([img_to_array(load_img(filename))], 'f')
     angle_binned, throttle = model.predict(image)
     angle_unbinned = utils.linear_unbin(angle_binned)
-    return [angle_unbinned, throttle[0][0]]
+    return [angle_unbinned, float(throttle[0][0])]
 
 
 def predict2(filename) :
-    ''' function to get prediction inside the program '''
+    ''' function to get prediction inside the program, w/o jsonification '''
     data = {'success': False}
     if request.method == "POST" :
-        data['predict'] = getPrediction(filename)
-        data['success'] = True
+        try :
+            data['predict'] = getPrediction(filename)
+            data['success'] = True
+        except Exception as reason :
+            print("exception: %s" % (reason))
     return data
-        
+
 @app.route("/predict", methods = ["POST"])
 def predict() :
     data = {'success': False}
@@ -71,15 +74,13 @@ def predict() :
     if request.method == "POST" :
         if request.files.get("image") :
             fPath = request.files.get("image")
-            app.logger.info('fPath: ', fPath)
             try :
-                data['prediction'] = getPrediction(request.files.get("image"))
+                data['predict'] = getPrediction(request.files.get("image"))
                 data['success'] = True
             except Exception as reason :
                 print("exception: %s" % (reason))
-            app.logger.info("POST prediction: ", data)
     return flask.jsonify(data)
- 
+
 @app.route('/')
 def index() :
     return render_template("upload.html")
