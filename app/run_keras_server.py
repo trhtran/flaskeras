@@ -8,16 +8,18 @@
 
 # import the necessary packages
 import os
+import io
 
 from keras.applications import ResNet50
 from keras.preprocessing.image import load_img, img_to_array
 from keras.applications import imagenet_utils
 from PIL import Image
 import numpy as np
-import io
 import configparser
 import flask
 from flask import Flask, render_template, request, send_from_directory
+from flask_login import LoginManager
+from flask_login import login_required
 from werkzeug import secure_filename
 
 import utils
@@ -32,6 +34,7 @@ from keras.models import load_model
 # initialize our Flask application and the Keras model
 app = flask.Flask(__name__)
 #app = flask.Flask(config)
+login_manager = LoginManager(app)
 model = None
 
 ######################################################################
@@ -118,8 +121,9 @@ def send_image(filename):
 # if this is the main thread of execution first load the model and
 # then start the server
 if __name__ == "__main__":
-	print(("* Loading Keras model and Flask starting server..."
-		"please wait until server has fully started"))
-	model = load_model(modelPath)
-	model._make_predict_function()
-	app.run(host=hostip, debug=True)
+    print(("* Loading Keras model and Flask starting server..."
+        "please wait until server has fully started"))
+    model = load_model(modelPath)
+    model._make_predict_function()
+    app.secret_key = os.urandom(12)
+    app.run(host=hostip, debug=True)
