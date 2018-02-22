@@ -14,11 +14,13 @@ from keras.preprocessing.image import load_img, img_to_array
 from keras.applications import imagenet_utils
 from PIL import Image
 import numpy as np
-import flask
 import io
 import configparser
+import flask
 from flask import Flask, render_template, request, send_from_directory
 from werkzeug import secure_filename
+
+import utils
 
 #import socket
 #hostip = socket.gethostbyname(socket.gethostname())
@@ -29,28 +31,36 @@ from keras.models import load_model
 
 # initialize our Flask application and the Keras model
 app = flask.Flask(__name__)
+#app = flask.Flask(config)
 model = None
 
 ######################################################################
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-hostip = '192.168.0.21'
-#hostip = '192.168.40.106'
+#TODO use config.py instead of configparser
+#hostip = '192.168.0.21'
+hostip = '192.168.40.106'
 config = configparser.ConfigParser()
-config.read('/home/hieu/work/web/keras-rest/app/config/keras-rest.ini')
-modelPath = config['SERVER']['modelPath']
+config.read('%s/%s' % (APP_ROOT, 'config/keras-rest.ini') )
+modelPath = '%s/%s' % (APP_ROOT, config['SERVER']['modelPath'])
 print('path to model: ', modelPath)
 
 app.config['UPLOADED_PHOTOS_DEST'] = config['SERVER']['imgSaveDir']
 
+######################################################################
+def getPrediction(filename) :
+    ''' call model for prediction, transform arrays '''
+    image = np.array([img_to_array(load_img(filename))], 'f')
+    angle_binned, throttle = model.predict(image)
+    angle_unbinned = utils.linear_unbin(angle_binned)
+    return [angle_unbinned, throttle[0][0]]
 
 
 def predict2(filename) :
+    ''' function to get prediction inside the program '''
     data = {'success': False}
-
     if request.method == "POST" :
-        image = np.array([img_to_array(load_img(filename))], 'f')
-        data['predict'] = [a.tolist() for a in model.predict(image)]
+        data['predict'] = getPrediction(filename)
         data['success'] = True
     return data
         
@@ -61,13 +71,13 @@ def predict() :
     if request.method == "POST" :
         if request.files.get("image") :
             fPath = request.files.get("image")
-            print('fPath: ', fPath)
+            app.logger.info('fPath: ', fPath)
             try :
-                image = np.array([img_to_array(load_img(request.files.get("image")))], 'f')
-                data['prediction'] = [a.tolist() for a in model.predict(image)]
+                data['prediction'] = getPrediction(request.files.get("image"))
                 data['success'] = True
             except Exception as reason :
                 print("exception: %s" % (reason))
+            app.logger.info("POST prediction: ", data)
     return flask.jsonify(data)
  
 @app.route('/')
@@ -84,19 +94,19 @@ def upload():
     imgFiles = []
     predictVals = []
     for upload in request.files.getlist("file") :
-        print (upload)
+        app.logger.info(upload)
         filename = upload.filename
 
         ext = os.path.splitext(filename)[1]
         if (ext.strip().lower() in ['.jpg', '.png']) :
-            print("processing")
+            app.logger.debug("processing")
         else :
             render_template("Error.html", message="File type not supported")
 
         destination = '/'.join([target, filename])
+        upload.save(destination)
         imgFiles.append(filename)
         predictVals.append(predict2(destination)['predict'])
-        upload.save(destination)
     img_pred = zip(imgFiles, predictVals)
     return render_template("gallery.html", img_pred=img_pred)
     #return render_template("gallery.html", image_names=imgFiles, predictVal=predictVals[0])

@@ -17,8 +17,9 @@
         <hr>
         {% for image_name, predictVal in img_pred %}
         <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-            <img class="img-responsive" src=" {{url_for('send_image', filename=image_name)}}">
+            <p style="text-align:center;"><img class="img-responsive" src=" {{url_for('send_image', filename=image_name)}}">
             <figcaption> Model response: {{ predictVal }} </figcaption>
+            </p>
         </div>
         {% endfor %}
     </div>
